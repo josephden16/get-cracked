@@ -1605,3 +1605,49 @@ export const TAG_COLORS = {
   read: { bg: "#2e2a1a", color: "#ff9f0a" },
   reflect: { bg: "#2a1e2e", color: "#bf5af2" },
 };
+
+function slugifySegment(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+}
+
+function buildSessionId(phase, week, day) {
+  return [
+    phase.phase,
+    slugifySegment(week.week),
+    slugifySegment(day.title),
+  ].join("__");
+}
+
+const ALL_SESSIONS = PLAN.flatMap((phase) =>
+  phase.weeks.flatMap((week) =>
+    week.days.map((day) => ({
+      ...day,
+      id: day.id ?? buildSessionId(phase, week, day),
+      phase: phase.phase,
+      phaseLabel: phase.phaseLabel,
+      phaseSub: phase.phaseSub,
+      week: week.week,
+      weekSub: week.weekSub,
+    })),
+  ),
+).map((session, globalIndex) => ({ ...session, globalIndex }));
+
+const SESSION_BY_LEGACY_INDEX = new Map(
+  ALL_SESSIONS.map((session) => [session.globalIndex, session]),
+);
+
+export function getAllSessions() {
+  return ALL_SESSIONS;
+}
+
+export function getSessionByLegacyIndex(index) {
+  return SESSION_BY_LEGACY_INDEX.get(Number(index)) ?? null;
+}
+
+export function getSessionIdByLegacyIndex(index) {
+  return getSessionByLegacyIndex(index)?.id ?? null;
+}
