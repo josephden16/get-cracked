@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { PLAN, PHASE_COLORS, TAG_COLORS } from "./planData";
 import { useStore, getAllSessions } from "./useStore";
-import "./app.css";
+import "./App.css";
 
 function CheckIcon() {
   return (
