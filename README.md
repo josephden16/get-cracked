@@ -1,16 +1,59 @@
-# React + Vite
+# get.cracked
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+get cracked is a study tracker for backend-focused learning.
 
-Currently, two official plugins are available:
+It is designed for people working through a long prep plan and wanting a cleaner way to keep up with sessions, notes, reminders, and momentum without losing progress.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Highlights
 
-## React Compiler
+- Track progress session by session
+- Keep short notes for each study block
+- Use reminders to stay consistent
+- Export and restore your progress whenever you want
+- Keep using it in guest mode or connect an account when account features are available
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## How It Works
 
-## Expanding the ESLint configuration
+The app is built to feel simple day to day:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Your progress stays available on the device you are using
+- Notes and reminders are part of the same flow, not separate tools
+- Backup and restore are available so your progress is portable
+- Account support can extend that experience across devices when configured
+
+## Run Locally
+
+1. Install dependencies.
+
+```bash
+npm install
+```
+
+2. Start the development server.
+
+```bash
+npm run dev
+```
+
+3. Open the local URL shown in the terminal.
+
+## Optional Account Features
+
+This project works without any account setup.
+
+If you want sign-in and synced progress for your own deployment, copy [.env.example](.env.example) to `.env.local` and add the values required for your project.
+
+## Scripts
+
+```bash
+npm run dev
+npm run lint
+npm run build
+npm run preview
+```
+
+## Notes
+
+- This repository is intended to stay safe for public sharing
+- Secrets and local environment values should never be committed
+- The app remains usable even when optional account features are not configured

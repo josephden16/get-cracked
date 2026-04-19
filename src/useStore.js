@@ -1,159 +1,347 @@
-import { useState, useEffect, useCallback } from "react";
-import { PLAN } from "./planData";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { getAllSessions as getPlanSessions } from "./planData";
+import { useAuth } from "./auth/useAuth";
+import {
+  applyImportPayload,
+  buildExportPayload,
+  hasMeaningfulLocalData,
+  loadTrackerState,
+  markExportRecorded,
+  markTrackerSynced,
+  markTrackerSyncError,
+  mergeTrackerStates,
+  persistTrackerState,
+  setReminderPreferences,
+  setSessionNote,
+  toggleSession,
+} from "./lib/trackerState";
+import {
+  loadRemoteTrackerState,
+  recordImportExportEvent,
+  saveRemoteTrackerState,
+} from "./lib/firebase/progressRepository";
 
-const STORAGE_KEY = "staff_plan_done_v2";
-const STREAK_KEY = "staff_plan_streak_v1";
-const NOTIF_KEY = "staff_plan_notif_v1";
-const NOTES_KEY = "staff_plan_notes_v1";
+const ALL_SESSIONS = getPlanSessions();
 
-// Flat list of all session IDs in order
+function syncStatusReducer(_state, action) {
+  switch (action.type) {
+    case "set":
+      return {
+        kind: action.kind,
+        message: action.message,
+      };
+    default:
+      return _state;
+  }
+}
+
+function normalizeSyncError(error) {
+  if (!error) return "Could not update your progress right now.";
+  if (error.code === "unavailable") {
+    return "Sync is temporarily unavailable.";
+  }
+  if (error.code === "permission-denied") {
+    return "This account can't sync right now.";
+  }
+  return "Could not update your progress right now.";
+}
+
 export function getAllSessions() {
-  const sessions = [];
-  PLAN.forEach((phase) => {
-    phase.weeks.forEach((week) => {
-      week.days.forEach((day) => {
-        sessions.push({ ...day, phase: phase.phase });
-      });
-    });
-  });
-  return sessions;
-}
-
-function loadDone() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-function loadStreak() {
-  try {
-    return JSON.parse(
-      localStorage.getItem(STREAK_KEY) || '{"streak":0,"lastDate":null}',
-    );
-  } catch {
-    return { streak: 0, lastDate: null };
-  }
-}
-
-function loadNotif() {
-  try {
-    return JSON.parse(
-      localStorage.getItem(NOTIF_KEY) || '{"enabled":false,"time":"09:00"}',
-    );
-  } catch {
-    return { enabled: false, time: "09:00" };
-  }
-}
-
-function loadNotes() {
-  try {
-    return JSON.parse(localStorage.getItem(NOTES_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return ALL_SESSIONS;
 }
 
 export function useStore() {
-  const [done, setDone] = useState(loadDone);
-  const [streakData, setStreakData] = useState(loadStreak);
-  const [notif, setNotif] = useState(loadNotif);
-  const [notes, setNotesState] = useState(loadNotes);
+  const [state, setState] = useState(loadTrackerState);
+  const [syncStatus, dispatchSyncStatus] = useReducer(syncStatusReducer, {
+    kind: "local",
+    message: "Saved on this device.",
+  });
+  const stateRef = useRef(state);
+  const bootstrapRef = useRef({ uid: null, complete: false });
+  const syncTimerRef = useRef(null);
+  const {
+    configured: firebaseConfigured,
+    error: authError,
+    missingKeys,
+    signIn,
+    signOut,
+    status: authStatus,
+    user,
+  } = useAuth();
 
-  const setNote = useCallback((idx, text) => {
-    setNotesState((prev) => {
-      const next = { ...prev };
-      if (text.trim()) next[idx] = text;
-      else delete next[idx];
-      localStorage.setItem(NOTES_KEY, JSON.stringify(next));
-      return next;
+  const updateSyncStatus = useCallback((kind, message) => {
+    dispatchSyncStatus({ type: "set", kind, message });
+  }, []);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  const commitState = useCallback((updater) => {
+    setState((previousState) => {
+      const nextState =
+        typeof updater === "function" ? updater(previousState) : updater;
+      persistTrackerState(nextState);
+      return nextState;
     });
   }, []);
 
-  const totalSessions = getAllSessions().length;
-  const doneSessions = Object.keys(done).length;
-
-  // Toggle a session done/undone by its global index
-  const toggle = useCallback((id) => {
-    setDone((prev) => {
-      const next = { ...prev };
-      if (next[id]) {
-        delete next[id];
-      } else {
-        next[id] = todayStr();
+  const recordActivity = useCallback(
+    async (type, payload = {}) => {
+      if (!user) return;
+      try {
+        await recordImportExportEvent(user.uid, {
+          type,
+          clientId: stateRef.current.sync.clientId,
+          ...payload,
+        });
+      } catch {
+        // Activity logging should never block the local flow.
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    },
+    [user],
+  );
 
-      // Update streak
-      const today = todayStr();
-      setStreakData((s) => {
-        let newStreak = s.streak;
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().slice(0, 10);
+  useEffect(() => {
+    if (!firebaseConfigured) {
+      updateSyncStatus(
+        "unavailable",
+        "Sync isn't available right now. Progress stays on this device.",
+      );
+      return;
+    }
 
-        if (!next[id]) {
-          // unchecked — only recompute if needed
-          return s;
-        }
+    if (!user && authStatus !== "loading" && authStatus !== "authenticating") {
+      updateSyncStatus(
+        authError ? "error" : "guest",
+        authError ||
+          "Guest mode is active. Sign in when you want your progress available across devices.",
+      );
+    }
+  }, [authError, authStatus, firebaseConfigured, updateSyncStatus, user]);
 
-        if (s.lastDate === today) {
-          // already counted today
-          return s;
-        } else if (s.lastDate === yesterdayStr) {
-          newStreak = s.streak + 1;
+  useEffect(() => {
+    if (!firebaseConfigured || !user) {
+      bootstrapRef.current = { uid: null, complete: false };
+      return undefined;
+    }
+
+    if (
+      bootstrapRef.current.uid === user.uid &&
+      bootstrapRef.current.complete
+    ) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const bootstrapRemoteState = async () => {
+      updateSyncStatus("syncing", "Loading your saved progress...");
+
+      try {
+        const localSnapshot = stateRef.current;
+        const remoteState = await loadRemoteTrackerState(user.uid);
+        if (cancelled) return;
+
+        if (!remoteState) {
+          if (hasMeaningfulLocalData(localSnapshot)) {
+            await saveRemoteTrackerState(user.uid, localSnapshot);
+            if (cancelled) return;
+            commitState(markTrackerSynced(localSnapshot));
+            updateSyncStatus("synced", "Your progress is now backed up.");
+          } else {
+            commitState(markTrackerSynced(localSnapshot));
+            updateSyncStatus("synced", "Account sync is ready.");
+          }
         } else {
-          newStreak = 1;
+          const mergedState = mergeTrackerStates(localSnapshot, remoteState);
+          if (mergedState.sync.needsUpload) {
+            await saveRemoteTrackerState(user.uid, mergedState);
+          }
+          if (cancelled) return;
+          commitState(markTrackerSynced(mergedState));
+          updateSyncStatus(
+            "synced",
+            mergedState.sync.needsUpload
+              ? "Your latest progress is now up to date."
+              : "Saved progress loaded.",
+          );
         }
-        const updated = { streak: newStreak, lastDate: today };
-        localStorage.setItem(STREAK_KEY, JSON.stringify(updated));
-        return updated;
+
+        bootstrapRef.current = { uid: user.uid, complete: true };
+      } catch (error) {
+        if (cancelled) return;
+        const message = normalizeSyncError(error);
+        commitState((previousState) =>
+          markTrackerSyncError(previousState, message),
+        );
+        updateSyncStatus("error", message);
+      }
+    };
+
+    void bootstrapRemoteState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [commitState, firebaseConfigured, updateSyncStatus, user]);
+
+  useEffect(() => {
+    if (!firebaseConfigured || !user || !bootstrapRef.current.complete)
+      return undefined;
+    if (!state.sync.needsUpload) return undefined;
+
+    if (syncTimerRef.current) {
+      clearTimeout(syncTimerRef.current);
+    }
+
+    updateSyncStatus("syncing", "Updating your progress...");
+
+    syncTimerRef.current = window.setTimeout(async () => {
+      try {
+        await saveRemoteTrackerState(user.uid, stateRef.current);
+        commitState((previousState) => markTrackerSynced(previousState));
+        updateSyncStatus("synced", "Everything is up to date.");
+      } catch (error) {
+        const message = normalizeSyncError(error);
+        commitState((previousState) =>
+          markTrackerSyncError(previousState, message),
+        );
+        updateSyncStatus("error", message);
+      }
+    }, 900);
+
+    return () => {
+      if (syncTimerRef.current) {
+        clearTimeout(syncTimerRef.current);
+      }
+    };
+  }, [
+    commitState,
+    firebaseConfigured,
+    state.sync.needsUpload,
+    updateSyncStatus,
+    user,
+  ]);
+
+  const toggle = useCallback(
+    (sessionId) => {
+      commitState((previousState) => toggleSession(previousState, sessionId));
+    },
+    [commitState],
+  );
+
+  const setNote = useCallback(
+    (sessionId, text) => {
+      commitState((previousState) =>
+        setSessionNote(previousState, sessionId, text),
+      );
+    },
+    [commitState],
+  );
+
+  const updateNotif = useCallback(
+    (patch) => {
+      commitState((previousState) =>
+        setReminderPreferences(previousState, patch),
+      );
+    },
+    [commitState],
+  );
+
+  const importProgress = useCallback(
+    (payload) => {
+      let summary = { restoredDone: 0, restoredNotes: 0 };
+
+      commitState((previousState) => {
+        const result = applyImportPayload(previousState, payload);
+        summary = result.summary;
+        return result.state;
       });
 
-      return next;
-    });
-  }, []);
+      void recordActivity("import", summary);
+      return summary;
+    },
+    [commitState, recordActivity],
+  );
 
-  const updateNotif = useCallback((patch) => {
-    setNotif((prev) => {
-      const next = { ...prev, ...patch };
-      localStorage.setItem(NOTIF_KEY, JSON.stringify(next));
-      return next;
-    });
-  }, []);
+  const createExportSnapshot = useCallback(
+    () => buildExportPayload(stateRef.current),
+    [],
+  );
 
-  // Bulk-merge done sessions from an import (preserves existing, adds new)
-  const importDone = useCallback((doneMap) => {
-    setDone((prev) => {
-      const next = { ...prev };
-      Object.entries(doneMap).forEach(([idx, date]) => {
-        if (!next[idx]) next[idx] = date;
+  const markExport = useCallback(
+    (payload) => {
+      commitState((previousState) => markExportRecorded(previousState));
+      void recordActivity("export", {
+        sessionCount: payload.sessions.length,
+        doneCount: payload.sessions.filter((session) => session.done).length,
+        noteCount: payload.sessions.filter((session) => session.note).length,
       });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
-  }, []);
+    },
+    [commitState, recordActivity],
+  );
 
-  // Next undone session (global index)
-  const sessions = getAllSessions();
-  const nextSession = sessions.find((_, i) => !done[i]);
+  const syncNow = useCallback(async () => {
+    if (!firebaseConfigured || !user) return false;
+
+    try {
+      updateSyncStatus("syncing", "Checking for updates...");
+      const remoteState = await loadRemoteTrackerState(user.uid);
+      const mergedState = remoteState
+        ? mergeTrackerStates(stateRef.current, remoteState)
+        : stateRef.current;
+
+      await saveRemoteTrackerState(user.uid, mergedState);
+      commitState(markTrackerSynced(mergedState));
+      updateSyncStatus("synced", "Sync complete.");
+      return true;
+    } catch (error) {
+      const message = normalizeSyncError(error);
+      commitState((previousState) =>
+        markTrackerSyncError(previousState, message),
+      );
+      updateSyncStatus("error", message);
+      return false;
+    }
+  }, [commitState, firebaseConfigured, updateSyncStatus, user]);
+
+  const totalSessions = ALL_SESSIONS.length;
+  const doneSessions = Object.keys(state.done).length;
+  const nextSession =
+    ALL_SESSIONS.find((session) => !state.done[session.id]) ?? null;
 
   return {
-    done,
-    toggle,
-    importDone,
-    totalSessions,
+    auth: {
+      configured: firebaseConfigured,
+      error: authError,
+      missingKeys,
+      signIn,
+      signOut,
+      status: authStatus,
+      user,
+    },
+    buildExportPayload: createExportSnapshot,
+    done: state.done,
     doneSessions,
-    streakData,
-    notif,
-    updateNotif,
+    importProgress,
+    markExport,
     nextSession,
-    notes,
+    notes: state.notes,
+    notif: state.notif,
     setNote,
+    streakData: state.streak,
+    syncState: {
+      ...syncStatus,
+      lastError: state.sync.lastError,
+      lastExportAt: state.sync.lastExportAt,
+      lastImportAt: state.sync.lastImportAt,
+      lastSyncedAt: state.sync.lastSyncedAt,
+      pendingChanges: state.sync.needsUpload,
+    },
+    syncNow,
+    toggle,
+    totalSessions,
+    updateNotif,
   };
 }
