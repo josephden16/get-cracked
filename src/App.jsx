@@ -962,7 +962,7 @@ export default function App() {
               <div key={`${phase.phase}-${week.week}`} className="week-block">
                 <div className="week-header-static">
                   <span className="week-title">{week.week}</span>
-                  <span className="week-sub">— {week.weekSub}</span>
+                  {week.weekSub && <span className="week-sub">— {week.weekSub}</span>}
                 </div>
                 <div className="week-days">
                   {visibleDays.map(({ session, isDone }) => (

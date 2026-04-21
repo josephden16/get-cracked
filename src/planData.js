@@ -5,11 +5,11 @@ export const PLAN = [
   {
     phase: "p1",
     phaseLabel: "Phase 1 — Foundations",
-    phaseSub: "weeks 1–6",
+    phaseSub: "",
     weeks: [
       {
-        week: "Week 1–2",
-        weekSub: "Distributed systems basics",
+        week: "Distributed Systems Basics",
+        weekSub: "",
         days: [
           {
             title: "Consistency vs availability",
@@ -143,8 +143,8 @@ export const PLAN = [
         ],
       },
       {
-        week: "Week 3–4",
-        weekSub: "Observability",
+        week: "Observability",
+        weekSub: "",
         days: [
           {
             title: "Structured logging",
@@ -278,8 +278,8 @@ export const PLAN = [
         ],
       },
       {
-        week: "Week 5–6",
-        weekSub: "Caching with correctness",
+        week: "Caching with Correctness",
+        weekSub: "",
         days: [
           {
             title: "Cache invalidation strategies",
@@ -422,11 +422,11 @@ export const PLAN = [
   {
     phase: "p2",
     phaseLabel: "Phase 2 — Senior Bridge",
-    phaseSub: "weeks 7–12",
+    phaseSub: "",
     weeks: [
       {
-        week: "Week 7–8",
-        weekSub: "Data modeling & storage depth",
+        week: "Data Modeling & Storage Depth",
+        weekSub: "",
         days: [
           {
             title: "Isolation levels & anomalies",
@@ -561,8 +561,8 @@ export const PLAN = [
         ],
       },
       {
-        week: "Week 9–10",
-        weekSub: "API design & contracts",
+        week: "API Design & Contracts",
+        weekSub: "",
         days: [
           {
             title: "Versioning strategies",
@@ -696,8 +696,8 @@ export const PLAN = [
         ],
       },
       {
-        week: "Week 11",
-        weekSub: "Messaging & async systems",
+        week: "Messaging & Async Systems",
+        weekSub: "",
         days: [
           {
             title: "Kafka semantics & guarantees",
@@ -793,8 +793,8 @@ export const PLAN = [
         ],
       },
       {
-        week: "Week 12",
-        weekSub: "Reliability engineering",
+        week: "Reliability Engineering",
+        weekSub: "",
         days: [
           {
             title: "SLOs & SLIs",
@@ -899,11 +899,11 @@ export const PLAN = [
   {
     phase: "p3",
     phaseLabel: "Phase 3 — Systems Depth",
-    phaseSub: "weeks 13–17",
+    phaseSub: "",
     weeks: [
       {
-        week: "Week 13–14",
-        weekSub: "Performance & capacity",
+        week: "Performance & Capacity",
+        weekSub: "",
         days: [
           {
             title: "Latency budgets (p50/p95/p99)",
@@ -1037,8 +1037,8 @@ export const PLAN = [
         ],
       },
       {
-        week: "Week 15",
-        weekSub: "Security fundamentals",
+        week: "Security Fundamentals",
+        weekSub: "",
         days: [
           {
             title: "AuthN vs AuthZ",
@@ -1138,8 +1138,8 @@ export const PLAN = [
         ],
       },
       {
-        week: "Week 16–17",
-        weekSub: "Infra literacy (Linux, containers, k8s)",
+        week: "Infra Literacy (Linux, Containers, K8s)",
+        weekSub: "",
         days: [
           {
             title: "Linux process model",
@@ -1256,6 +1256,25 @@ export const PLAN = [
             ],
           },
           {
+            title: "CI/CD pipeline",
+            task: "Build: Set up a GitHub Actions pipeline for a Node.js service. Steps: lint → test → build Docker image → push to registry → deploy to staging. Add a manual approval gate before production.",
+            tag: "build",
+            links: [
+              {
+                label: "GitHub Actions – Node.js CI guide",
+                url: "https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs",
+              },
+              {
+                label: "Docker build & push in GitHub Actions",
+                url: "https://docs.docker.com/build/ci/github-actions/",
+              },
+              {
+                label: "CI/CD best practices – GitLab",
+                url: "https://about.gitlab.com/topics/ci-cd/cicd-pipeline/",
+              },
+            ],
+          },
+          {
             title: "Week review",
             task: "Reflect: Draw the infra diagram of a Node.js service from memory. What would you change for production?",
             tag: "reflect",
@@ -1282,11 +1301,11 @@ export const PLAN = [
   {
     phase: "p4",
     phaseLabel: "Phase 4 — Staff-Level Skills",
-    phaseSub: "weeks 18–21",
+    phaseSub: "",
     weeks: [
       {
-        week: "Week 18",
-        weekSub: "Payments domain depth",
+        week: "Payments Domain Depth",
+        weekSub: "",
         days: [
           {
             title: "Payment rails overview",
@@ -1383,11 +1402,30 @@ export const PLAN = [
               },
             ],
           },
+          {
+            title: "NDPR & data residency",
+            task: "Read the Nigeria Data Protection Regulation (NDPR) and NITDA's implementation framework. Map how data residency requirements affect storage and cross-border data transfer architecture.",
+            tag: "read",
+            links: [
+              {
+                label: "NDPR full text – NITDA",
+                url: "https://nitda.gov.ng/nit/nigerias-data-protection-regulation/",
+              },
+              {
+                label: "NDPR implementation framework – NITDA (PDF)",
+                url: "https://nitda.gov.ng/wp-content/uploads/2020/01/NDPR-Implementation-Framework.pdf",
+              },
+              {
+                label: "CBN data localisation policy for fintechs",
+                url: "https://www.cbn.gov.ng/fintech/",
+              },
+            ],
+          },
         ],
       },
       {
-        week: "Week 19",
-        weekSub: "Codebase leadership",
+        week: "Codebase Leadership",
+        weekSub: "",
         days: [
           {
             title: "Writing design docs",
@@ -1405,6 +1443,25 @@ export const PLAN = [
               {
                 label: "How to write an engineering RFC – Squarespace",
                 url: "https://engineering.squarespace.com/blog/2019/the-power-of-yes-if",
+              },
+            ],
+          },
+          {
+            title: "Architectural Decision Records (ADRs)",
+            task: "Read Michael Nygard's original ADR post. Write 3 ADRs for past technical decisions in a project you've worked on. Each should cover: context, decision, status, and consequences.",
+            tag: "build",
+            links: [
+              {
+                label: "Documenting Architecture Decisions – Michael Nygard",
+                url: "https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions",
+              },
+              {
+                label: "ADR tools & templates – adr.github.io",
+                url: "https://adr.github.io/",
+              },
+              {
+                label: "Lightweight ADRs – Thoughtworks Technology Radar",
+                url: "https://www.thoughtworks.com/radar/techniques/lightweight-architecture-decision-records",
               },
             ],
           },
@@ -1488,8 +1545,8 @@ export const PLAN = [
         ],
       },
       {
-        week: "Week 20–21",
-        weekSub: "Synthesis & positioning",
+        week: "Synthesis & Positioning",
+        weekSub: "",
         days: [
           {
             title: "System design with tradeoffs",
