@@ -148,7 +148,7 @@ export const PLAN = [
         days: [
           {
             title: "Structured logging",
-            task: "Refactor: Add structured JSON logs (pino/winston) to a personal project. Include correlation IDs on every request.",
+            task: "Refactor: Add structured JSON logs (pino/winston) to an existing Node.js project. Include correlation IDs on every request.",
             tag: "build",
             links: [
               {
@@ -449,7 +449,7 @@ export const PLAN = [
           },
           {
             title: "Query plans & indexes",
-            task: "Run EXPLAIN ANALYZE on 3 slow queries in a personal Postgres DB. Add missing indexes. Measure the before/after difference.",
+            task: "Run EXPLAIN ANALYZE on 3 slow queries in a sample or existing Postgres DB. Add missing indexes. Measure the before/after difference.",
             tag: "build",
             links: [
               {
@@ -545,7 +545,7 @@ export const PLAN = [
           },
           {
             title: "Week review",
-            task: "Reflect: Look at the MySkoolFees or Clisha Review schema. What would break first at 100× data volume? What would you change?",
+            task: "Reflect: Look at a side project or open-source schema you're familiar with. What would break first at 100× data volume? What would you change?",
             tag: "reflect",
             links: [
               {
@@ -680,7 +680,7 @@ export const PLAN = [
           },
           {
             title: "Week review",
-            task: "Reflect: Audit the deepidv MCP API surface. Which endpoints could silently break a client on the next deploy? Write down the risk and a fix.",
+            task: "Reflect: Audit a REST API you've built or used recently. Which endpoints could silently break a client on the next deploy? Write down the risk and a fix.",
             tag: "reflect",
             links: [
               {
@@ -777,7 +777,7 @@ export const PLAN = [
           },
           {
             title: "Week review",
-            task: "Reflect: In the Clisha Review or MySkoolFees stack, where would introducing an async queue reduce coupling? Where would it introduce risk? Write a 1-page trade-off note.",
+            task: "Reflect: In a project you've worked on, where would introducing an async queue reduce coupling? Where would it introduce risk? Write a 1-page trade-off note.",
             tag: "reflect",
             links: [
               {
@@ -874,7 +874,7 @@ export const PLAN = [
           },
           {
             title: "Week review",
-            task: "Reflect: Define a realistic error budget for the deepidv verification service. What consumes it fastest? What's the first thing you'd fix?",
+            task: "Reflect: Define a realistic error budget for a verification or authentication service. What consumes it fastest? What's the first thing you'd fix?",
             tag: "reflect",
             links: [
               {
