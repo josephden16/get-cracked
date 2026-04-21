@@ -596,7 +596,6 @@ function AccountDrawer({ auth, syncState, onSyncNow, onClose }) {
                     <div className="account-name">Guest mode</div>
                     <div className="account-email">Progress stays on this device until you connect an account.</div>
                   </div>
-                  <span className={`sync-pill sync-pill--${getSyncTone(auth, syncState)}`}>{getSyncLabel(auth, syncState)}</span>
                 </div>
                 <div className="account-card-copy">Sign in later to make your progress available on your other devices.</div>
               </div>
