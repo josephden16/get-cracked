@@ -262,7 +262,7 @@ export const PLAN = [
           },
           {
             title: "Week review",
-            task: "Reflect: What 3 things would you instrument first if you joined a new fintech codebase tomorrow?",
+            task: "Reflect: What 3 things would you instrument first if you joined a new codebase tomorrow?",
             tag: "reflect",
             links: [
               {
@@ -739,7 +739,7 @@ export const PLAN = [
           },
           {
             title: "Dead-letter queues & retries",
-            task: "Build: Add a DLQ to an existing BullMQ job queue (you've used this in prod). Configure retry backoff + poison message handling. Write the operator runbook for when the DLQ fills up.",
+            task: "Build: Add a DLQ to an existing BullMQ job queue. Configure retry backoff + poison message handling. Write the operator runbook for when the DLQ fills up.",
             tag: "build",
             links: [
               {
@@ -855,7 +855,7 @@ export const PLAN = [
           },
           {
             title: "Error budgets & postmortems",
-            task: "Read a real postmortem (Cloudflare or Stripe). Write a blameless postmortem for a real incident you've encountered (could be the ERPNext data loss incident). Use the 5-whys format.",
+            task: "Read a real postmortem (Cloudflare or Stripe). Write a blameless postmortem for a real incident you've encountered. Use the 5-whys format.",
             tag: "read",
             links: [
               {
