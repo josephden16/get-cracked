@@ -115,6 +115,20 @@ body {
 .header-brand:hover .brand-prompt {
   filter: brightness(1.7);
 }
+.github-link {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease;
+  margin-left: 4px;
+}
+.github-link:hover {
+  opacity: 1;
+  color: var(--text);
+}
 .brand-name {
   font-size: 15px;
   font-weight: 700;
