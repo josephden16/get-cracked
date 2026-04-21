@@ -267,36 +267,27 @@ body {
 }
 .filter-bar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0;
   margin-bottom: 24px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 3px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-.filter-bar::-webkit-scrollbar {
-  display: none;
 }
 .filter-group {
   display: flex;
   align-items: center;
   gap: 1px;
-  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 .filter-group--phases {
-  flex: 1;
+  border-top: 1px solid var(--border2);
+  padding-top: 3px;
+  margin-top: 2px;
 }
 .filter-sep {
-  width: 1px;
-  height: 16px;
-  background: var(--border);
-  margin: 0 4px;
-  flex-shrink: 0;
+  display: none;
 }
 .filter-btn {
   font-family: var(--font);
@@ -335,11 +326,33 @@ body {
   height: 5px;
   border-radius: 50%;
   flex-shrink: 0;
-  opacity: 0.45;
+  opacity: 0.5;
   transition: opacity 0.13s;
 }
 .filter-btn--phase.active .filter-dot {
   opacity: 1;
+}
+.filter-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 2px;
+  letter-spacing: 0;
+  transition:
+    color 0.13s,
+    background 0.13s;
+}
+.filter-btn.active .filter-count {
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  opacity: 0.75;
+}
+.filter-btn--phase.active .filter-count {
+  color: inherit;
+  opacity: 0.7;
 }
 .phase-block {
   margin-bottom: 32px;
@@ -1409,9 +1422,12 @@ body {
     display: none;
   }
   .header-right {
-    gap: 8px;
+    gap: 6px;
   }
   .sync-pill-btn span {
+    display: none;
+  }
+  .hide-mobile {
     display: none;
   }
   .account-card-top,
@@ -1427,4 +1443,42 @@ body {
   .session-card-main {
     padding: 10px 12px;
   }
+}
+.app-footer {
+  margin-top: 48px;
+  padding: 20px 0 4px;
+  border-top: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.app-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.app-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text3);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.app-footer-link:hover {
+  color: var(--text2);
+}
+.app-footer-sep {
+  color: var(--text3);
+  opacity: 0.4;
+  font-size: 11px;
+  user-select: none;
+}
+.app-footer-copy {
+  font-size: 11px;
+  color: var(--text3);
+  opacity: 0.5;
 }

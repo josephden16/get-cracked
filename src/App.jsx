@@ -640,7 +640,7 @@ function Header({ totalSessions, doneSessions, streak, auth, syncState, onBell, 
             <span className="brand-prompt">{">"}</span>
             <span className="brand-name">get.cracked</span>
             <span className="brand-cursor" aria-hidden="true">_</span>            <a
-              className="github-link"
+              className="github-link hide-mobile"
               href="https://github.com/josephden16/get-cracked"
               target="_blank"
               rel="noopener noreferrer"
@@ -659,8 +659,8 @@ function Header({ totalSessions, doneSessions, streak, auth, syncState, onBell, 
               <CloudIcon />
               <span>{syncLabel}</span>
             </button>
-            <button className="bell-btn" onClick={onImport} title="Import progress"><ImportIcon /></button>
-            <button className="bell-btn" onClick={onExport} title="Export progress"><ExportIcon /></button>
+            <button className="bell-btn hide-mobile" onClick={onImport} title="Import progress"><ImportIcon /></button>
+            <button className="bell-btn hide-mobile" onClick={onExport} title="Export progress"><ExportIcon /></button>
             <button className="bell-btn" onClick={onBell} title="Reminder settings"><BellIcon /></button>
           </div>
         </div>
@@ -895,25 +895,33 @@ export default function App() {
 
         <div className="filter-bar">
           <div className="filter-group">
-            {UTILITY_FILTERS.map((entry) => (
-              <button key={entry.id} className={`filter-btn${filter === entry.id ? " active" : ""}`} onClick={() => setFilter(entry.id)}>
-                {entry.label}
-              </button>
-            ))}
+            {UTILITY_FILTERS.map((entry) => {
+              const count = entry.id === "all" ? totalSessions : entry.id === "done" ? doneSessions : totalSessions - doneSessions;
+              return (
+                <button key={entry.id} className={`filter-btn${filter === entry.id ? " active" : ""}`} onClick={() => setFilter(entry.id)}>
+                  {entry.label}
+                  <span className="filter-count">{count}</span>
+                </button>
+              );
+            })}
           </div>
           <div className="filter-sep" />
           <div className="filter-group filter-group--phases">
-            {PHASE_FILTERS.map((entry) => (
-              <button
-                key={entry.id}
-                className={`filter-btn filter-btn--phase${filter === entry.id ? " active" : ""}`}
-                style={filter === entry.id ? { color: entry.color, background: `${entry.color}1a`, borderColor: `${entry.color}40` } : {}}
-                onClick={() => setFilter(entry.id)}
-              >
-                <span className="filter-dot" style={{ background: entry.color }} />
-                {entry.label}
-              </button>
-            ))}
+            {PHASE_FILTERS.map((entry) => {
+              const counts = phaseCounts[entry.id] || { done: 0, total: 0 };
+              return (
+                <button
+                  key={entry.id}
+                  className={`filter-btn filter-btn--phase${filter === entry.id ? " active" : ""}`}
+                  style={filter === entry.id ? { color: entry.color, background: `${entry.color}1a`, borderColor: `${entry.color}40` } : {}}
+                  onClick={() => setFilter(entry.id)}
+                >
+                  <span className="filter-dot" style={{ background: entry.color }} />
+                  {entry.label}
+                  <span className="filter-count">{counts.done}/{counts.total}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -988,6 +996,15 @@ export default function App() {
             <div className="completion-sub">All {totalSessions} sessions done. Time to pick your next deep area.</div>
           </div>
         )}
+
+        <footer className="app-footer">
+          <div className="app-footer-links">
+            <a className="app-footer-link" href="https://github.com/josephden16/get-cracked" target="_blank" rel="noopener noreferrer"><GitHubIcon /> Source</a>
+            <span className="app-footer-sep">·</span>
+            <a className="app-footer-link" href="https://github.com/josephden16/get-cracked/issues" target="_blank" rel="noopener noreferrer">Report an issue</a>
+          </div>
+          <div className="app-footer-copy">get.cracked — an open study tracker for engineers levelling up.</div>
+        </footer>
       </main>
 
       {showNotif && (
