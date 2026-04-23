@@ -490,6 +490,46 @@ body {
   flex-direction: column;
   gap: 5px;
 }
+.dive-deeper-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 7px 0 4px;
+  margin-top: 2px;
+  transition: color 0.15s;
+}
+.dive-deeper-toggle:hover,
+.dive-deeper-toggle.open {
+  color: var(--text2);
+}
+.dive-deeper-chevron {
+  font-style: normal;
+  font-size: 9px;
+  line-height: 1;
+}
+.dive-deeper-count {
+  font-size: 9px;
+  opacity: 0.55;
+  background: var(--bg3);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 1px;
+}
+.dive-deeper-days {
+  margin-top: 4px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border2);
+  opacity: 0.82;
+}
 .session-card {
   background: var(--bg2);
   border: 1px solid var(--border2);

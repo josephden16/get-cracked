@@ -716,6 +716,16 @@ export default function App() {
   const [showImport, setShowImport] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [toast, setToast] = useState(null);
+  const [expandedDeeperWeeks, setExpandedDeeperWeeks] = useState(new Set());
+
+  const toggleDeeperWeek = (key) => {
+    setExpandedDeeperWeeks((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
   const prevDone = useRef(doneSessions);
   const pendingScroll = useRef(null);
   const dismissToast = () => setToast(null);
@@ -966,27 +976,61 @@ export default function App() {
               </div>
             </div>
 
-            {phaseWeeks.map(({ week, visibleDays }) => (
-              <div key={`${phase.phase}-${week.week}`} className="week-block">
-                <div className="week-header-static">
-                  <span className="week-title">{week.week}</span>
-                  {week.weekSub && <span className="week-sub">— {week.weekSub}</span>}
+            {phaseWeeks.map(({ week, visibleDays }) => {
+              const weekKey = `${phase.phase}-${week.week}`;
+              const mainDays = visibleDays.filter(({ session }) => !session.diveDeeper);
+              const deeperDays = visibleDays.filter(({ session }) => session.diveDeeper);
+              const deeperExpanded = expandedDeeperWeeks.has(weekKey);
+
+              return (
+                <div key={weekKey} className="week-block">
+                  <div className="week-header-static">
+                    <span className="week-title">{week.week}</span>
+                    {week.weekSub && <span className="week-sub">— {week.weekSub}</span>}
+                  </div>
+                  <div className="week-days">
+                    {mainDays.map(({ session, isDone }) => (
+                      <div id={`session-${session.globalIndex}`} key={session.id}>
+                        <SessionCard
+                          session={session}
+                          isDone={isDone}
+                          onToggle={handleToggle}
+                          note={notes[session.id]?.text || ""}
+                          onNoteChange={setNote}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {deeperDays.length > 0 && (
+                    <>
+                      <button
+                        className={`dive-deeper-toggle${deeperExpanded ? " open" : ""}`}
+                        onClick={() => toggleDeeperWeek(weekKey)}
+                      >
+                        <span className="dive-deeper-chevron">{deeperExpanded ? "▾" : "▸"}</span>
+                        dive deeper
+                        <span className="dive-deeper-count">{deeperDays.length}</span>
+                      </button>
+                      {deeperExpanded && (
+                        <div className="week-days dive-deeper-days">
+                          {deeperDays.map(({ session, isDone }) => (
+                            <div id={`session-${session.globalIndex}`} key={session.id}>
+                              <SessionCard
+                                session={session}
+                                isDone={isDone}
+                                onToggle={handleToggle}
+                                note={notes[session.id]?.text || ""}
+                                onNoteChange={setNote}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
-                <div className="week-days">
-                  {visibleDays.map(({ session, isDone }) => (
-                    <div id={`session-${session.globalIndex}`} key={session.id}>
-                      <SessionCard
-                        session={session}
-                        isDone={isDone}
-                        onToggle={handleToggle}
-                        note={notes[session.id]?.text || ""}
-                        onNoteChange={setNote}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ))}
 
