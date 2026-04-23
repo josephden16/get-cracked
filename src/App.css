@@ -11,8 +11,8 @@
   --bg2: #111111;
   --bg3: #1c1c1e;
   --text: #fdfcfc;
-  --text2: #a7a6a6;
-  --text3: #6e6e73;
+  --text2: #c4c3c3;
+  --text3: #909095;
   --border: rgba(253, 252, 252, 0.1);
   --border2: rgba(253, 252, 252, 0.06);
   --green: #30d158;
@@ -518,7 +518,7 @@ body {
 }
 .dive-deeper-count {
   font-size: 9px;
-  opacity: 0.55;
+  color: #707075;
   background: var(--bg3);
   border-radius: 3px;
   padding: 1px 5px;
@@ -597,7 +597,7 @@ body {
 }
 .session-task {
   font-size: 12px;
-  color: var(--text2);
+  color: #b8b7b7;
   line-height: 1.55;
   margin-bottom: 8px;
 }
@@ -643,7 +643,7 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: var(--text3);
+  color: #a0a0a5;
   text-decoration: none;
   transition: color 0.15s;
   line-height: 1.4;
@@ -667,7 +667,7 @@ body {
 }
 .completion-sub {
   font-size: 12px;
-  color: var(--text3);
+  color: var(--text2);
 }
 .empty-state {
   padding: 56px 0;
@@ -943,7 +943,7 @@ body {
 }
 .today-pin-task {
   font-size: 12px;
-  color: #c8c6c6;
+  color: #b8b7b7;
   line-height: 1.5;
   margin-bottom: 8px;
 }
@@ -1075,8 +1075,7 @@ body {
   overflow: hidden;
 }
 .notes-area::placeholder {
-  color: var(--text3);
-  opacity: 0.6;
+  color: #5e5e63;
 }
 .notes-area:focus {
   color: var(--text);
@@ -1095,8 +1094,7 @@ body {
 }
 .notes-hint {
   font-size: 10px;
-  color: var(--text3);
-  opacity: 0.45;
+  color: #606065;
   letter-spacing: 0.04em;
 }
 /* ── Toast ── */
@@ -1519,6 +1517,5 @@ body {
 }
 .app-footer-copy {
   font-size: 11px;
-  color: var(--text3);
-  opacity: 0.5;
+  color: #606065;
 }

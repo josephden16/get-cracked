@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useId } from "react";
 import { PLAN, PHASE_COLORS, TAG_COLORS, getAllSessions } from "./planData";
 import { useStore } from "./useStore";
 import "./App.css";
@@ -288,11 +288,92 @@ function Toast({ message, onUndo, onDismiss }) {
   );
 }
 
+// ── Modal accessibility helpers ────────────────────────────────────────────
+
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
+function getFocusableElements(container) {
+  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+    (el) => el.offsetParent !== null,
+  );
+}
+
+function trapFocus(event, container) {
+  if (!container) return;
+  const focusable = getFocusableElements(container);
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey) {
+    if (document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    }
+  } else {
+    if (document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+}
+
+/**
+ * Handles focus trap, Escape-to-close, initial focus, and focus restoration
+ * for modal dialogs. Returns a ref to attach to the dialog container element.
+ */
+function useModalA11y(onClose) {
+  const dialogRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+
+    // Move focus into the dialog
+    const dialog = dialogRef.current;
+    if (dialog) {
+      const first = getFocusableElements(dialog)[0];
+      if (first) first.focus();
+      else dialog.focus();
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key === "Tab") {
+        trapFocus(event, dialogRef.current);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      // Restore focus to the element that opened the dialog
+      if (previouslyFocused?.focus) {
+        previouslyFocused.focus();
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — intentionally runs once
+
+  return dialogRef;
+}
+
+// ── Drawer components ──────────────────────────────────────────────────────
+
 function ImportDrawer({ onImport, onClose }) {
   const [dragOver, setDragOver] = useState(false);
   const [parsed, setParsed] = useState(null);
   const [error, setError] = useState(null);
   const fileRef = useRef(null);
+  const titleId = useId();
+  const dialogRef = useModalA11y(onClose);
 
   const readFile = (file) => {
     if (!file || !file.name.endsWith(".json")) {
@@ -322,11 +403,18 @@ function ImportDrawer({ onImport, onClose }) {
     : null;
 
   return (
-    <div className="drawer-overlay" onClick={onClose}>
-      <div className="drawer" onClick={(event) => event.stopPropagation()}>
+    <div className="drawer-overlay" onClick={onClose} aria-hidden="true">
+      <div
+        className="drawer"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="drawer-header">
-          <span>Import progress</span>
-          <button className="drawer-close" onClick={onClose}>✕</button>
+          <span id={titleId}>Import progress</span>
+          <button className="drawer-close" onClick={onClose} aria-label="Close import dialog">✕</button>
         </div>
         <div className="drawer-body">
           {!parsed ? (
@@ -379,6 +467,8 @@ function NotifDrawer({ notif, updateNotif, onClose, signedIn }) {
   const [permission, setPermission] = useState(() =>
     "Notification" in window ? Notification.permission : "denied",
   );
+  const titleId = useId();
+  const dialogRef = useModalA11y(onClose);
 
   const requestPermission = async () => {
     const result = await Notification.requestPermission();
@@ -401,11 +491,18 @@ function NotifDrawer({ notif, updateNotif, onClose, signedIn }) {
   };
 
   return (
-    <div className="drawer-overlay" onClick={onClose}>
-      <div className="drawer" onClick={(event) => event.stopPropagation()}>
+    <div className="drawer-overlay" onClick={onClose} aria-hidden="true">
+      <div
+        className="drawer"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="drawer-header">
-          <span>Reminder settings</span>
-          <button className="drawer-close" onClick={onClose}>✕</button>
+          <span id={titleId}>Reminder settings</span>
+          <button className="drawer-close" onClick={onClose} aria-label="Close reminder settings">✕</button>
         </div>
         <div className="drawer-body">
           <div className="setting-row">
@@ -438,6 +535,8 @@ function NotifDrawer({ notif, updateNotif, onClose, signedIn }) {
 function AccountDrawer({ auth, syncState, onSyncNow, onClose }) {
   const [busy, setBusy] = useState(null);
   const [syncLocked, setSyncLocked] = useState(false);
+  const titleId = useId();
+  const dialogRef = useModalA11y(onClose);
 
   useEffect(() => {
     if (!syncLocked) return undefined;
@@ -497,11 +596,18 @@ function AccountDrawer({ auth, syncState, onSyncNow, onClose }) {
   };
 
   return (
-    <div className="drawer-overlay" onClick={onClose}>
-      <div className="drawer" onClick={(event) => event.stopPropagation()}>
+    <div className="drawer-overlay" onClick={onClose} aria-hidden="true">
+      <div
+        className="drawer"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="drawer-header">
-          <span>Account & sync</span>
-          <button className="drawer-close" onClick={onClose}>✕</button>
+          <span id={titleId}>Account &amp; sync</span>
+          <button className="drawer-close" onClick={onClose} aria-label="Close account settings">✕</button>
         </div>
         <div className="drawer-body">
           <div className="account-hero">
