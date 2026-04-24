@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useId } from "react";
 import { PLAN, PHASE_COLORS, TAG_COLORS, getAllSessions } from "./planData";
 import { useStore } from "./useStore";
 import "./App.css";
@@ -288,11 +288,92 @@ function Toast({ message, onUndo, onDismiss }) {
   );
 }
 
+// ── Modal accessibility helpers ────────────────────────────────────────────
+
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
+function getFocusableElements(container) {
+  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
+    (el) => el.offsetParent !== null,
+  );
+}
+
+function trapFocus(event, container) {
+  if (!container) return;
+  const focusable = getFocusableElements(container);
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey) {
+    if (document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    }
+  } else {
+    if (document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+}
+
+/**
+ * Handles focus trap, Escape-to-close, initial focus, and focus restoration
+ * for modal dialogs. Returns a ref to attach to the dialog container element.
+ */
+function useModalA11y(onClose) {
+  const dialogRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+
+    // Move focus into the dialog
+    const dialog = dialogRef.current;
+    if (dialog) {
+      const first = getFocusableElements(dialog)[0];
+      if (first) first.focus();
+      else dialog.focus();
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key === "Tab") {
+        trapFocus(event, dialogRef.current);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      // Restore focus to the element that opened the dialog
+      if (previouslyFocused?.focus) {
+        previouslyFocused.focus();
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — intentionally runs once
+
+  return dialogRef;
+}
+
+// ── Drawer components ──────────────────────────────────────────────────────
+
 function ImportDrawer({ onImport, onClose }) {
   const [dragOver, setDragOver] = useState(false);
   const [parsed, setParsed] = useState(null);
   const [error, setError] = useState(null);
   const fileRef = useRef(null);
+  const titleId = useId();
+  const dialogRef = useModalA11y(onClose);
 
   const readFile = (file) => {
     if (!file || !file.name.endsWith(".json")) {
@@ -322,11 +403,18 @@ function ImportDrawer({ onImport, onClose }) {
     : null;
 
   return (
-    <div className="drawer-overlay" onClick={onClose}>
-      <div className="drawer" onClick={(event) => event.stopPropagation()}>
+    <div className="drawer-overlay" onClick={onClose} aria-hidden="true">
+      <div
+        className="drawer"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="drawer-header">
-          <span>Import progress</span>
-          <button className="drawer-close" onClick={onClose}>✕</button>
+          <span id={titleId}>Import progress</span>
+          <button className="drawer-close" onClick={onClose} aria-label="Close import dialog">✕</button>
         </div>
         <div className="drawer-body">
           {!parsed ? (
@@ -379,6 +467,8 @@ function NotifDrawer({ notif, updateNotif, onClose, signedIn }) {
   const [permission, setPermission] = useState(() =>
     "Notification" in window ? Notification.permission : "denied",
   );
+  const titleId = useId();
+  const dialogRef = useModalA11y(onClose);
 
   const requestPermission = async () => {
     const result = await Notification.requestPermission();
@@ -401,11 +491,18 @@ function NotifDrawer({ notif, updateNotif, onClose, signedIn }) {
   };
 
   return (
-    <div className="drawer-overlay" onClick={onClose}>
-      <div className="drawer" onClick={(event) => event.stopPropagation()}>
+    <div className="drawer-overlay" onClick={onClose} aria-hidden="true">
+      <div
+        className="drawer"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="drawer-header">
-          <span>Reminder settings</span>
-          <button className="drawer-close" onClick={onClose}>✕</button>
+          <span id={titleId}>Reminder settings</span>
+          <button className="drawer-close" onClick={onClose} aria-label="Close reminder settings">✕</button>
         </div>
         <div className="drawer-body">
           <div className="setting-row">
@@ -438,6 +535,8 @@ function NotifDrawer({ notif, updateNotif, onClose, signedIn }) {
 function AccountDrawer({ auth, syncState, onSyncNow, onClose }) {
   const [busy, setBusy] = useState(null);
   const [syncLocked, setSyncLocked] = useState(false);
+  const titleId = useId();
+  const dialogRef = useModalA11y(onClose);
 
   useEffect(() => {
     if (!syncLocked) return undefined;
@@ -497,11 +596,18 @@ function AccountDrawer({ auth, syncState, onSyncNow, onClose }) {
   };
 
   return (
-    <div className="drawer-overlay" onClick={onClose}>
-      <div className="drawer" onClick={(event) => event.stopPropagation()}>
+    <div className="drawer-overlay" onClick={onClose} aria-hidden="true">
+      <div
+        className="drawer"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="drawer-header">
-          <span>Account & sync</span>
-          <button className="drawer-close" onClick={onClose}>✕</button>
+          <span id={titleId}>Account &amp; sync</span>
+          <button className="drawer-close" onClick={onClose} aria-label="Close account settings">✕</button>
         </div>
         <div className="drawer-body">
           <div className="account-hero">
@@ -682,11 +788,30 @@ const UTILITY_FILTERS = [
   { id: "done", label: "Done" },
 ];
 
-const PHASE_FILTERS = [
+const PHASE_OPTIONS = [
+  { id: "all", label: "All phases" },
   { id: "p1", label: "Phase 1 — Foundations", color: "#30d158" },
   { id: "p2", label: "Phase 2 — Senior bridge", color: "#007aff" },
   { id: "p3", label: "Phase 3 — Systems depth", color: "#bf5af2" },
   { id: "p4", label: "Phase 4 — Staff-level skills", color: "#818cf8" },
+];
+
+const TAG_FILTERS = [
+  { id: "build", label: "build", color: "#30d158" },
+  { id: "watch", label: "watch", color: "#007aff" },
+  { id: "read", label: "read", color: "#ff9f0a" },
+  { id: "reflect", label: "reflect", color: "#bf5af2" },
+];
+
+const TOPIC_CHIPS = [
+  { label: "infra", query: "infra" },
+  { label: "databases", query: "database" },
+  { label: "security", query: "security" },
+  { label: "caching", query: "cache" },
+  { label: "kafka", query: "kafka" },
+  { label: "observability", query: "observability" },
+  { label: "payments", query: "payment" },
+  { label: "api design", query: "api" },
 ];
 
 const BASE_MILESTONES = [7, 14, 21, 30];
@@ -711,11 +836,23 @@ export default function App() {
     updateNotif,
   } = useStore();
   const [filter, setFilter] = useState("all");
+  const [phaseFilter, setPhaseFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [showNotif, setShowNotif] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [toast, setToast] = useState(null);
+  const [expandedDeeperWeeks, setExpandedDeeperWeeks] = useState(new Set());
+
+  const toggleDeeperWeek = (key) => {
+    setExpandedDeeperWeeks((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
   const prevDone = useRef(doneSessions);
   const pendingScroll = useRef(null);
   const dismissToast = () => setToast(null);
@@ -728,7 +865,7 @@ export default function App() {
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [filter, search]);
+  }, [filter, phaseFilter, tagFilter, search]);
 
   useEffect(() => {
     if (!notif.enabled || typeof Notification === "undefined" || Notification.permission !== "granted") return;
@@ -846,9 +983,10 @@ export default function App() {
         .filter(({ session, isDone }) => {
           if (filter === "todo" && isDone) return false;
           if (filter === "done" && !isDone) return false;
-          if (["p1", "p2", "p3", "p4"].includes(filter) && phase.phase !== filter) return false;
+          if (phaseFilter !== "all" && phase.phase !== phaseFilter) return false;
+          if (tagFilter !== "all" && session.tag !== tagFilter) return false;
           if (!q) return true;
-          return `${session.title} ${session.task}`.toLowerCase().includes(q);
+          return `${session.title} ${session.task} ${session.week}`.toLowerCase().includes(q);
         });
 
       globalIndex += week.days.length;
@@ -891,6 +1029,18 @@ export default function App() {
             />
             {search && <button className="search-clear" onClick={() => setSearch("")}>✕</button>}
           </div>
+          <select
+            className="phase-select"
+            value={phaseFilter}
+            onChange={(event) => setPhaseFilter(event.target.value)}
+            aria-label="Filter by phase"
+          >
+            {PHASE_OPTIONS.map((opt) => {
+              const counts = phaseCounts[opt.id];
+              const label = counts ? `${opt.label} (${counts.done}/${counts.total})` : opt.label;
+              return <option key={opt.id} value={opt.id}>{label}</option>;
+            })}
+          </select>
         </div>
 
         <div className="filter-bar">
@@ -906,24 +1056,34 @@ export default function App() {
             })}
           </div>
           <div className="filter-sep" />
-          <div className="filter-group filter-group--phases">
-            {PHASE_FILTERS.map((entry) => {
-              const counts = phaseCounts[entry.id] || { done: 0, total: 0 };
-              return (
-                <button
-                  key={entry.id}
-                  className={`filter-btn filter-btn--phase${filter === entry.id ? " active" : ""}`}
-                  style={filter === entry.id ? { color: entry.color, background: `${entry.color}1a`, borderColor: `${entry.color}40` } : {}}
-                  onClick={() => setFilter(entry.id)}
-                >
-                  <span className="filter-dot" style={{ background: entry.color }} />
-                  {entry.label}
-                  <span className="filter-count">{counts.done}/{counts.total}</span>
-                </button>
-              );
-            })}
+          <div className="filter-group">
+            {TAG_FILTERS.map((entry) => (
+              <button
+                key={entry.id}
+                className={`filter-btn filter-btn--tag${tagFilter === entry.id ? " active" : ""}`}
+                style={tagFilter === entry.id ? { color: entry.color, background: `${entry.color}1a`, borderColor: `${entry.color}40` } : {}}
+                onClick={() => setTagFilter(tagFilter === entry.id ? "all" : entry.id)}
+              >
+                <span className="filter-dot" style={{ background: entry.color }} />
+                {entry.label}
+              </button>
+            ))}
           </div>
         </div>
+
+        {!search && (
+          <div className="topic-chips">
+            {TOPIC_CHIPS.map((chip) => (
+              <button
+                key={chip.label}
+                className={`topic-chip${search === chip.query ? " active" : ""}`}
+                onClick={() => setSearch(search === chip.query ? "" : chip.query)}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {nextSession && (
           <TodayPin
@@ -935,6 +1095,8 @@ export default function App() {
               } else {
                 pendingScroll.current = nextSession.globalIndex;
                 setFilter("all");
+                setPhaseFilter("all");
+                setTagFilter("all");
                 setSearch("");
               }
             }}
@@ -966,27 +1128,61 @@ export default function App() {
               </div>
             </div>
 
-            {phaseWeeks.map(({ week, visibleDays }) => (
-              <div key={`${phase.phase}-${week.week}`} className="week-block">
-                <div className="week-header-static">
-                  <span className="week-title">{week.week}</span>
-                  {week.weekSub && <span className="week-sub">— {week.weekSub}</span>}
+            {phaseWeeks.map(({ week, visibleDays }) => {
+              const weekKey = `${phase.phase}-${week.week}`;
+              const mainDays = visibleDays.filter(({ session }) => !session.diveDeeper);
+              const deeperDays = visibleDays.filter(({ session }) => session.diveDeeper);
+              const deeperExpanded = expandedDeeperWeeks.has(weekKey);
+
+              return (
+                <div key={weekKey} className="week-block">
+                  <div className="week-header-static">
+                    <span className="week-title">{week.week}</span>
+                    {week.weekSub && <span className="week-sub">— {week.weekSub}</span>}
+                  </div>
+                  <div className="week-days">
+                    {mainDays.map(({ session, isDone }) => (
+                      <div id={`session-${session.globalIndex}`} key={session.id}>
+                        <SessionCard
+                          session={session}
+                          isDone={isDone}
+                          onToggle={handleToggle}
+                          note={notes[session.id]?.text || ""}
+                          onNoteChange={setNote}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {deeperDays.length > 0 && (
+                    <>
+                      <button
+                        className={`dive-deeper-toggle${deeperExpanded ? " open" : ""}`}
+                        onClick={() => toggleDeeperWeek(weekKey)}
+                      >
+                        <span className="dive-deeper-chevron">{deeperExpanded ? "▾" : "▸"}</span>
+                        dive deeper
+                        <span className="dive-deeper-count">{deeperDays.length}</span>
+                      </button>
+                      {deeperExpanded && (
+                        <div className="week-days dive-deeper-days">
+                          {deeperDays.map(({ session, isDone }) => (
+                            <div id={`session-${session.globalIndex}`} key={session.id}>
+                              <SessionCard
+                                session={session}
+                                isDone={isDone}
+                                onToggle={handleToggle}
+                                note={notes[session.id]?.text || ""}
+                                onNoteChange={setNote}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
-                <div className="week-days">
-                  {visibleDays.map(({ session, isDone }) => (
-                    <div id={`session-${session.globalIndex}`} key={session.id}>
-                      <SessionCard
-                        session={session}
-                        isDone={isDone}
-                        onToggle={handleToggle}
-                        note={notes[session.id]?.text || ""}
-                        onNoteChange={setNote}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ))}
 

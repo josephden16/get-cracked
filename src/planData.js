@@ -91,6 +91,7 @@ export const PLAN = [
             title: "Leader election & clocks",
             task: "Build: Simulate clock skew between two Node processes. Observe ordering bugs. Fix with logical timestamps.",
             tag: "build",
+            diveDeeper: true,
             links: [
               {
                 label: "Lamport clocks paper (original)",
@@ -207,6 +208,7 @@ export const PLAN = [
             title: "Sampling strategies",
             task: "Read Honeycomb's sampling guide. Decide what sampling rate makes sense for a payment processing service.",
             tag: "read",
+            diveDeeper: true,
             links: [
               {
                 label: "Sampling in observability – Honeycomb",
@@ -342,6 +344,7 @@ export const PLAN = [
             title: "Negative caching",
             task: "Read Cloudflare's negative caching post. Add negative cache for 'user not found' in a Node API.",
             tag: "read",
+            diveDeeper: true,
             links: [
               {
                 label: "Negative caching – Cloudflare blog",
@@ -361,6 +364,7 @@ export const PLAN = [
             title: "When caching hides bugs",
             task: "Build: Introduce a cache coherency bug (stale account balance). Document how you'd detect it in prod.",
             tag: "build",
+            diveDeeper: true,
             links: [
               {
                 label: "Cache coherence – Distributed Systems lecture",
@@ -528,6 +532,7 @@ export const PLAN = [
             title: "Partitioning & archiving",
             task: "Add range partitioning to a transactions table by month in Postgres. Test query performance with and without partition pruning.",
             tag: "build",
+            diveDeeper: true,
             links: [
               {
                 label: "Table partitioning – Postgres docs",
@@ -663,6 +668,7 @@ export const PLAN = [
             title: "OpenAPI & contract testing",
             task: "Generate an OpenAPI spec from your NestJS app. Write a Pact consumer contract test for one endpoint. Verify it catches a breaking change.",
             tag: "build",
+            diveDeeper: true,
             links: [
               {
                 label: "NestJS Swagger / OpenAPI – official docs",
@@ -966,6 +972,7 @@ export const PLAN = [
             title: "Queueing theory intuition",
             task: "Read 'The Art of Capacity Planning' ch. 1–2. Apply Little's Law to estimate throughput of a payment processor.",
             tag: "read",
+            diveDeeper: true,
             links: [
               {
                 label: "Little's Law explained with examples",
@@ -985,6 +992,7 @@ export const PLAN = [
             title: "Tail latency causes",
             task: "Watch 'Tail at Scale' (Google paper summary on YouTube). Reproduce a tail latency scenario with a slow Redis call.",
             tag: "watch",
+            diveDeeper: true,
             links: [
               {
                 label: "The Tail at Scale – Google paper (ACM)",
@@ -1221,6 +1229,7 @@ export const PLAN = [
             title: "Autoscaling & deployment strategies",
             task: "Read AWS ECS blue/green deployment docs. Add canary rollout plan to a service.",
             tag: "read",
+            diveDeeper: true,
             links: [
               {
                 label: "ECS blue/green deployments – AWS docs",
@@ -1240,6 +1249,7 @@ export const PLAN = [
             title: "Cloud bill literacy",
             task: "Build: Estimate monthly AWS cost for a payments service: ECS Fargate + RDS + ElastiCache. Know what each line pays for.",
             tag: "build",
+            diveDeeper: true,
             links: [
               {
                 label: "AWS Cost Explorer guide",
@@ -1387,6 +1397,7 @@ export const PLAN = [
             title: "PCI DSS basics",
             task: "Read PCI DSS SAQ-A summary. Audit a mock checkout flow against each requirement.",
             tag: "read",
+            diveDeeper: true,
             links: [
               {
                 label: "PCI DSS SAQ-A guide – PCI Security Council",
@@ -1406,6 +1417,7 @@ export const PLAN = [
             title: "NDPR & data residency",
             task: "Read the Nigeria Data Protection Regulation (NDPR) and NITDA's implementation framework. Map how data residency requirements affect storage and cross-border data transfer architecture.",
             tag: "read",
+            diveDeeper: true,
             links: [
               {
                 label: "NDPR full text – NITDA",
@@ -1450,6 +1462,7 @@ export const PLAN = [
             title: "Architectural Decision Records (ADRs)",
             task: "Read Michael Nygard's original ADR post. Write 3 ADRs for past technical decisions in a project you've worked on. Each should cover: context, decision, status, and consequences.",
             tag: "build",
+            diveDeeper: true,
             links: [
               {
                 label: "Documenting Architecture Decisions – Michael Nygard",
@@ -1527,6 +1540,7 @@ export const PLAN = [
             title: "Boring systems",
             task: "Reflect: What would it take to make your most fragile current system boring? Write the incident runbook for it.",
             tag: "reflect",
+            diveDeeper: true,
             links: [
               {
                 label: "In Praise of Boring Technology – Dan McKinley",
