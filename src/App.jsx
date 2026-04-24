@@ -788,11 +788,30 @@ const UTILITY_FILTERS = [
   { id: "done", label: "Done" },
 ];
 
-const PHASE_FILTERS = [
+const PHASE_OPTIONS = [
+  { id: "all", label: "All phases" },
   { id: "p1", label: "Phase 1 — Foundations", color: "#30d158" },
   { id: "p2", label: "Phase 2 — Senior bridge", color: "#007aff" },
   { id: "p3", label: "Phase 3 — Systems depth", color: "#bf5af2" },
   { id: "p4", label: "Phase 4 — Staff-level skills", color: "#818cf8" },
+];
+
+const TAG_FILTERS = [
+  { id: "build", label: "build", color: "#30d158" },
+  { id: "watch", label: "watch", color: "#007aff" },
+  { id: "read", label: "read", color: "#ff9f0a" },
+  { id: "reflect", label: "reflect", color: "#bf5af2" },
+];
+
+const TOPIC_CHIPS = [
+  { label: "infra", query: "infra" },
+  { label: "databases", query: "database" },
+  { label: "security", query: "security" },
+  { label: "caching", query: "cache" },
+  { label: "kafka", query: "kafka" },
+  { label: "observability", query: "observability" },
+  { label: "payments", query: "payment" },
+  { label: "api design", query: "api" },
 ];
 
 const BASE_MILESTONES = [7, 14, 21, 30];
@@ -817,6 +836,8 @@ export default function App() {
     updateNotif,
   } = useStore();
   const [filter, setFilter] = useState("all");
+  const [phaseFilter, setPhaseFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [showNotif, setShowNotif] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -844,7 +865,7 @@ export default function App() {
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [filter, search]);
+  }, [filter, phaseFilter, tagFilter, search]);
 
   useEffect(() => {
     if (!notif.enabled || typeof Notification === "undefined" || Notification.permission !== "granted") return;
@@ -962,9 +983,10 @@ export default function App() {
         .filter(({ session, isDone }) => {
           if (filter === "todo" && isDone) return false;
           if (filter === "done" && !isDone) return false;
-          if (["p1", "p2", "p3", "p4"].includes(filter) && phase.phase !== filter) return false;
+          if (phaseFilter !== "all" && phase.phase !== phaseFilter) return false;
+          if (tagFilter !== "all" && session.tag !== tagFilter) return false;
           if (!q) return true;
-          return `${session.title} ${session.task}`.toLowerCase().includes(q);
+          return `${session.title} ${session.task} ${session.week}`.toLowerCase().includes(q);
         });
 
       globalIndex += week.days.length;
@@ -1007,6 +1029,18 @@ export default function App() {
             />
             {search && <button className="search-clear" onClick={() => setSearch("")}>✕</button>}
           </div>
+          <select
+            className="phase-select"
+            value={phaseFilter}
+            onChange={(event) => setPhaseFilter(event.target.value)}
+            aria-label="Filter by phase"
+          >
+            {PHASE_OPTIONS.map((opt) => {
+              const counts = phaseCounts[opt.id];
+              const label = counts ? `${opt.label} (${counts.done}/${counts.total})` : opt.label;
+              return <option key={opt.id} value={opt.id}>{label}</option>;
+            })}
+          </select>
         </div>
 
         <div className="filter-bar">
@@ -1022,24 +1056,34 @@ export default function App() {
             })}
           </div>
           <div className="filter-sep" />
-          <div className="filter-group filter-group--phases">
-            {PHASE_FILTERS.map((entry) => {
-              const counts = phaseCounts[entry.id] || { done: 0, total: 0 };
-              return (
-                <button
-                  key={entry.id}
-                  className={`filter-btn filter-btn--phase${filter === entry.id ? " active" : ""}`}
-                  style={filter === entry.id ? { color: entry.color, background: `${entry.color}1a`, borderColor: `${entry.color}40` } : {}}
-                  onClick={() => setFilter(entry.id)}
-                >
-                  <span className="filter-dot" style={{ background: entry.color }} />
-                  {entry.label}
-                  <span className="filter-count">{counts.done}/{counts.total}</span>
-                </button>
-              );
-            })}
+          <div className="filter-group">
+            {TAG_FILTERS.map((entry) => (
+              <button
+                key={entry.id}
+                className={`filter-btn filter-btn--tag${tagFilter === entry.id ? " active" : ""}`}
+                style={tagFilter === entry.id ? { color: entry.color, background: `${entry.color}1a`, borderColor: `${entry.color}40` } : {}}
+                onClick={() => setTagFilter(tagFilter === entry.id ? "all" : entry.id)}
+              >
+                <span className="filter-dot" style={{ background: entry.color }} />
+                {entry.label}
+              </button>
+            ))}
           </div>
         </div>
+
+        {!search && (
+          <div className="topic-chips">
+            {TOPIC_CHIPS.map((chip) => (
+              <button
+                key={chip.label}
+                className={`topic-chip${search === chip.query ? " active" : ""}`}
+                onClick={() => setSearch(search === chip.query ? "" : chip.query)}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {nextSession && (
           <TodayPin
@@ -1051,6 +1095,8 @@ export default function App() {
               } else {
                 pendingScroll.current = nextSession.globalIndex;
                 setFilter("all");
+                setPhaseFilter("all");
+                setTagFilter("all");
                 setSearch("");
               }
             }}
