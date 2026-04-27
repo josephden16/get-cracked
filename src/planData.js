@@ -1151,9 +1151,18 @@ export const PLAN = [
         days: [
           {
             title: "Linux process model",
-            task: "Watch 'Linux processes, threads, and how they relate to containers' (Ivan Velichko). Run strace on a Node process.",
+            task: "Watch 'Understanding Linux Processes in 8 minutes'. Then watch 'Containers unplugged: Linux namespaces' to connect processes to containers. Run strace on a Node process.",
             tag: "watch",
             links: [
+              {
+                label: "Understanding Linux Processes in 8 minutes",
+                url: "https://www.youtube.com/watch?v=_J69B8hex_g",
+              },
+              {
+                label:
+                  "Containers unplugged: Linux namespaces – Michael Kerrisk",
+                url: "https://www.youtube.com/watch?v=0kJPa-1FuoI",
+              },
               {
                 label: "Linux containers from scratch – Ivan Velichko",
                 url: "https://iximiuz.com/en/posts/container-learning-path/",
